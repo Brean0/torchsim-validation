@@ -1,0 +1,72 @@
+{
+  "finding": "F001",
+  "status": "confirmed_observation",
+  "fresh_engine_runs": true,
+  "scope": "Default full-list PairForcesModel doubling for this isolated pair; controls verified",
+  "torchsim_commit": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+  "distances": [
+    1.1,
+    1.3,
+    1.5
+  ],
+  "units": {
+    "distance": "sigma",
+    "forces": "F*sigma/epsilon",
+    "energy": "epsilon"
+  },
+  "atom_0_x_force": {
+    "ase": [
+      -1.5880953898240562,
+      2.239979929791143,
+      1.1580288310461555
+    ],
+    "lammps": [
+      -1.5880953898240566,
+      2.239979929791143,
+      1.1580288310461555
+    ],
+    "jaxmd": [
+      -1.5880953898240566,
+      2.2399799297911427,
+      1.1580288310461553
+    ],
+    "torchmd": [
+      -1.5880953898240577,
+      2.2399799297911427,
+      1.1580288310461553
+    ],
+    "PairForcesModel_full_default": [
+      -3.176190779648117,
+      4.479959859582286,
+      2.3160576620923106
+    ],
+    "PairForcesModel_half": [
+      -1.5880953898240584,
+      2.239979929791143,
+      1.1580288310461553
+    ],
+    "PairPotentialModel": [
+      -1.5880953898240595,
+      2.2399799297911427,
+      1.158028831046155
+    ]
+  },
+  "external_reference_count": 4,
+  "maximum_reference_difference": 1.5543122344752192e-15,
+  "reference_agreement_tolerance": {
+    "rtol": 1e-12,
+    "atol": 5e-12
+  },
+  "default_pairforces_factor": 2.0,
+  "both_torchsim_controls_match_references": true,
+  "both_torchsim_neighbor_backends_agree": true,
+  "original_soft_sphere_controls_verified": true,
+  "raw_result_files": {
+    "torchsim": "torchsim.json",
+    "ase": "ase.json",
+    "lammps": "lammps.json",
+    "jaxmd": "jaxmd.json",
+    "torchmd": "torchmd.json"
+  },
+  "interpretation": "Exit zero confirms the stated observation; upstream is not fixed."
+}

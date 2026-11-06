@@ -1,0 +1,431 @@
+{
+  "schema_version": 1,
+  "torchsim_commit": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+  "source_provenance": {
+    "commit": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+    "verification": "installed Git checkout; tracked tree clean"
+  },
+  "versions": {
+    "torch-sim-atomistic": "0.6.2",
+    "torch": "2.15.0",
+    "ase": "3.29.0",
+    "numpy": "2.5.4"
+  },
+  "ase_source_file_sha256": {
+    "ase/calculators/lj.py": "6a98f4b2c37dc8977b5a6baf9f0166cb43663e58796d2c499c65d31b7d26fd27",
+    "ase/calculators/idealgas.py": "2178c152218340a95e25da5748de52f82f35581b7a718c3b921ea36c0977ab31",
+    "ase/md/verlet.py": "e5b8a7b6b7144191b29ada747f845a249de88ea446fa607a2c6727413b934f99",
+    "ase/md/velocitydistribution.py": "1cc2e8e834f1c0a0fa0ea2fa448ad5b25ca5613fd4d7c90409a2432b8f1c2c3f"
+  },
+  "backend": "CPU",
+  "dtype": "float64 except F007 deliberate input float32",
+  "success_semantics": "observations validated, not upstream fixes",
+  "findings": {
+    "F002": {
+      "status": "observed_internal_invariant_failure_with_native_control",
+      "scope": "LennardJonesModel with full torch_nl_n2; compare each engine internally, since ASE shifts cutoff energy",
+      "positions": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.3,
+          0.0,
+          0.0
+        ]
+      ],
+      "cutoff": 2.5,
+      "sigma": 1.0,
+      "epsilon": 1.0,
+      "torchsim_total": -0.6570169144600471,
+      "torchsim_per_atom": [
+        -0.6570169144600471,
+        -0.6570169144600471
+      ],
+      "ase_total": -0.6407000233240471,
+      "ase_per_atom": [
+        -0.32035001166202354,
+        -0.32035001166202354
+      ],
+      "reference_invariant": "sum(per_atom_energies) == total_energy within each engine",
+      "units": "eV (sigma in angstrom)",
+      "original_soft_sphere_regression": {
+        "distance": 0.5,
+        "sigma": 1.0,
+        "epsilon": 1.0,
+        "alpha": 2.0,
+        "total": 0.125,
+        "per_atom": [
+          0.125,
+          0.125
+        ]
+      }
+    },
+    "F003": {
+      "status": "observed_nonfinite_derivative_native_jax_reference_separate",
+      "scope": "fractional alpha and species pair beyond its sigma, but inside global neighbor cutoff",
+      "positions": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.5,
+          0.0,
+          0.0
+        ],
+        [
+          5.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "species": [
+        0,
+        0,
+        1
+      ],
+      "alpha": 2.5,
+      "sigma_matrix": [
+        [
+          1.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0
+        ]
+      ],
+      "epsilon": 1.0,
+      "energy": [
+        0.0
+      ],
+      "forces": [
+        [
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "nonfinite_force_components": 6,
+      "integer_alpha_control_forces": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "reference_invariant": "all pair distances exceed species sigma, so energies and derivatives are zero",
+      "nonfinite_encoding": "null, with explicit count; strict JSON contains no NaN token"
+    },
+    "F004": {
+      "status": "observed_per_system_broadcast_error_with_native_control",
+      "scope": "three systems, two atoms each, zero forces, dt vector length three",
+      "dt": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "initial_velocity": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "torchsim_positions": [
+        [
+          0.1,
+          0.2,
+          0.3
+        ],
+        [
+          0.1,
+          0.2,
+          0.3
+        ],
+        [
+          0.1,
+          0.2,
+          0.3
+        ],
+        [
+          0.1,
+          0.2,
+          0.3
+        ],
+        [
+          0.1,
+          0.2,
+          0.3
+        ],
+        [
+          0.1,
+          0.2,
+          0.3
+        ]
+      ],
+      "expected_positions": [
+        [
+          0.1,
+          0.1,
+          0.1
+        ],
+        [
+          0.1,
+          0.1,
+          0.1
+        ],
+        [
+          0.2,
+          0.2,
+          0.2
+        ],
+        [
+          0.2,
+          0.2,
+          0.2
+        ],
+        [
+          0.3,
+          0.3,
+          0.3
+        ],
+        [
+          0.3,
+          0.3,
+          0.3
+        ]
+      ],
+      "ase_positions": [
+        [
+          0.1,
+          0.1,
+          0.1
+        ],
+        [
+          0.1,
+          0.1,
+          0.1
+        ],
+        [
+          0.2,
+          0.2,
+          0.2
+        ],
+        [
+          0.2,
+          0.2,
+          0.2
+        ],
+        [
+          0.3,
+          0.3,
+          0.3
+        ],
+        [
+          0.3,
+          0.3,
+          0.3
+        ]
+      ],
+      "max_position_error": 0.19999999999999998,
+      "scalar_timestep_max_errors": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "units": "consistent internal-unit equation dr = v*dt; ASE uses its internal time (not femtoseconds)",
+      "reference_invariant": "independent native ASE IdealGas + VelocityVerlet per timestep; each coordinate in one system has same displacement"
+    },
+    "F005": {
+      "status": "qualified_initialization_convention_and_distribution_finding",
+      "scope": "unequal masses; both rules remove total momentum; JAX MD shares TorchSim rule",
+      "masses": [
+        1.0,
+        4.0
+      ],
+      "kT": 1.0,
+      "seed": 4,
+      "raw_momenta": [
+        [
+          -1.6052762948770103,
+          0.23248570595798024,
+          2.23987006611963
+        ],
+        [
+          1.6945876432382438,
+          2.4012885153408385,
+          -0.8031006521617661
+        ]
+      ],
+      "torchsim_momenta": [
+        [
+          -1.649931969057627,
+          -1.084401404691429,
+          1.521485359140698
+        ],
+        [
+          1.649931969057627,
+          1.0844014046914292,
+          -1.521485359140698
+        ]
+      ],
+      "ase_momenta": [
+        [
+          -1.623138564549257,
+          -0.2942691383017835,
+          1.9525161833280573
+        ],
+        [
+          1.623138564549257,
+          0.2942691383017837,
+          -1.9525161833280573
+        ]
+      ],
+      "torchsim_total_momentum": [
+        0.0,
+        2.220446049250313e-16,
+        0.0
+      ],
+      "ase_total_momentum": [
+        0.0,
+        2.220446049250313e-16,
+        0.0
+      ],
+      "ase_projection_error": 0.0,
+      "max_projection_difference": 0.7901322663896455,
+      "mean_projection_variance": [
+        1.25,
+        1.25
+      ],
+      "mass_weighted_conditioned_gaussian_variance": [
+        0.8,
+        0.8
+      ],
+      "torchsim_ensemble_variance": [
+        1.2510351317695345,
+        1.2510351317695347
+      ],
+      "ensemble_count": 32768,
+      "ensemble_seed": 71,
+      "reference_invariant": "ASE Stationary(preserve_temperature=False) applies one common velocity shift to same raw momenta",
+      "qualification": "not a failure to zero COM velocity and not unanimous cross-library evidence; distribution concern assumes canonical Gaussian momenta conditioned on zero total momentum"
+    },
+    "F006": {
+      "status": "observed_mass_loss_with_native_io_control",
+      "scope": "explicit isotope/custom mass survives ASE trajectory IO but not TorchSim-to-ASE export",
+      "input_masses": [
+        2.014,
+        2.014
+      ],
+      "state_masses": [
+        2.014,
+        2.014
+      ],
+      "exported_masses": [
+        1.008,
+        1.008
+      ],
+      "native_ase_roundtrip_masses": [
+        2.014,
+        2.014
+      ],
+      "ase_default_H_masses": [
+        1.008,
+        1.008
+      ],
+      "units": "amu",
+      "reference_invariant": "explicit masses survive conversion round trip"
+    },
+    "F007": {
+      "status": "observed_api_dtype_inconsistency",
+      "scope": "API check, not physics comparison; CPU dtype tested; accelerator device conversion not executed",
+      "input_dtype": "torch.float32",
+      "requested_dtype": "torch.float64",
+      "single_dtype": "torch.float64",
+      "list_dtype": "torch.float32",
+      "requested_device": "cpu",
+      "single_device": "cpu",
+      "list_device": "cpu",
+      "reference_invariant": "same initialize_state dtype argument must apply to both SimState and list[SimState]",
+      "external_physics_reference": "not applicable"
+    },
+    "F008": {
+      "status": "observed_returned_state_extra_inconsistency",
+      "scope": "state/API consistency check using deterministic toy model; not external physics comparison",
+      "atomic_numbers": [
+        1,
+        2
+      ],
+      "original_positions": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "returned_positions": [
+        [
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          1.0,
+          0.0,
+          0.0
+        ]
+      ],
+      "original_energy": [
+        -2.0
+      ],
+      "returned_energy": [
+        -2.0
+      ],
+      "original_signal": [
+        0.0,
+        2.0
+      ],
+      "returned_signal": [
+        1.0,
+        0.0
+      ],
+      "reevaluated_signal": [
+        0.0,
+        2.0
+      ],
+      "proposed_energy_delta": 1.0,
+      "kT": 1e-06,
+      "acceptance_probability": 0.0,
+      "reference_invariant": "cached per-atom extras must match reevaluation of the returned, rejected state",
+      "external_physics_reference": "not applicable"
+    }
+  }
+}

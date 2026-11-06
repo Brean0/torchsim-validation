@@ -1,0 +1,472 @@
+{
+  "schema_version": 1,
+  "audited_project": {
+    "name": "TorchSim",
+    "version": "0.6.2",
+    "commit": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+    "source_url": "https://github.com/TorchSim/torch-sim/tree/d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+    "audit_date": "2026-11-06"
+  },
+  "counts": {
+    "initial_reproduced_regressions": 8,
+    "completed_five_implementation_force_comparisons": 1,
+    "five_implementation_finding_ids": [
+      "F001"
+    ],
+    "qualified_semantic_finding_ids": [
+      "F005"
+    ],
+    "whole_codebase_defect_count": null,
+    "note": "One force accumulation root cause can affect multiple classes, potentials, inputs, and backends. These coverage dimensions are not additional findings. Eight is not eight cross-validated physics bugs.",
+    "supplemental_executed_native_controls": {
+      "ASE": [
+        "F002",
+        "F004",
+        "F005",
+        "F006"
+      ],
+      "JAX MD": [
+        "F003",
+        "F005"
+      ]
+    }
+  },
+  "evidence_policy": {
+    "validator_success": "Confirms the stated observations and controls, not that upstream defects are fixed.",
+    "not_applicable": "No equivalent interface or matched native interaction is included; never treated as a pass.",
+    "source_vs_run": "Source exposure is distinguished from numerical execution.",
+    "integration_note": "Supplemental saved evidence and native controls have been inspected and passed the standard-library validator. F005 remains semantically qualified."
+  },
+  "findings": [
+    {
+      "id": "F001",
+      "title": "Default full-list direct pair forces are counted twice",
+      "classification": "force_accumulation_defect",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "native_force_comparison": "completed_current_live_run_with_four_native_references",
+        "repository_reproduction": "completed_portable_live_run; saved_native_vectors_validated"
+      },
+      "affected_paths": [
+        "torch_sim.models.pair_potential.PairForcesModel.forward: default reduce_to_half_list=False",
+        "torch_sim.models.particle_life.ParticleLifeModel: inherits affected default path (source exposure)"
+      ],
+      "control_paths": [
+        "PairForcesModel(reduce_to_half_list=True), symmetric forces only",
+        "PairPotentialModel full-list energy-derived forces",
+        "Default neighbor dispatcher and torch_nl_n2"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/pair_potential.py#L580-L588",
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/pair_potential.py#L431-L441",
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/particle_life.py#L57-L121",
+        "https://github.com/torchmd/torchmd/blob/09484183e34af78bb69b27a0149aeccf1318dbc7/torchmd/forces.py",
+        "https://pypi.org/project/jax-md/0.2.29/",
+        "https://pypi.org/project/ase/3.29.0/",
+        "https://pypi.org/project/lammps/2025.7.22.4.0/",
+        "https://files.pythonhosted.org/packages/d6/2f/e4763555e3b8c66805090147956f57f0d134a67fb8aaccadcebec7362425/jax_md-0.2.29-py3-none-any.whl"
+      ],
+      "scope": {
+        "observed": "Two atoms, symmetric Lennard-Jones, r/sigma=[1.1,1.3,1.5], no PBC, CPU float64; original alpha=2 soft sphere separately checked by JAX MD.",
+        "conclusion": "Full-list direct atomic forces are twice four native references; half-list and energy-derived controls agree.",
+        "root_cause_count": 1,
+        "named_public_entry_classes_on_path": 2,
+        "excluded": "No whole-codebase count, blanket force-field conclusion, asymmetric exact-factor claim, or independent ParticleLife numerical validation."
+      },
+      "refs": [
+        "docs/force-paths.md",
+        "scripts/run_force_comparison.py",
+        "tests/test_force_comparison.py",
+        "evidence/force-doubling/torchsim.json",
+        "evidence/force-doubling/ase.json",
+        "evidence/force-doubling/lammps.json",
+        "evidence/force-doubling/jaxmd.json",
+        "evidence/force-doubling/torchmd.json",
+        "evidence/force-doubling/comparison.json"
+      ],
+      "native_comparisons": {
+        "ASE": "executed_native_lj",
+        "LAMMPS": "executed_native_lj",
+        "JAX MD": "executed_native_lj_and_original_soft_sphere",
+        "TorchMD": "executed_native_lj"
+      },
+      "primary_documentation_urls": [
+        "https://docs.lammps.org/pair_lj.html",
+        "https://docs.ase-lib.org/_modules/ase/calculators/lj.html",
+        "https://jax-md.readthedocs.io/en/main/jax_md.energy.html#jax_md.energy.lennard_jones_pair",
+        "https://jax-md.readthedocs.io/en/main/jax_md.quantity.html#jax_md.quantity.force"
+      ]
+    },
+    {
+      "id": "F002",
+      "title": "Optional per-atom energies do not sum to system energy",
+      "classification": "output_allocation_inconsistency",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "observed_internal_invariant_failure_with_native_control"
+      },
+      "affected_paths": [
+        "torch_sim.models.pair_potential.PairPotentialModel.forward: per_atom_energies=True",
+        "SoftSphereModel: reproduced subclass",
+        "LennardJonesModel: supplemental reproduced subclass"
+      ],
+      "control_paths": [
+        "Sum per-atom contributions by system and compare with same model total",
+        "Native LJ per-atom energy sum in ASE and JAX MD"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/pair_potential.py#L403-L418",
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/soft_sphere.py#L175-L248",
+        "https://pypi.org/project/ase/3.29.0/",
+        "https://pypi.org/project/jax-md/0.2.29/",
+        "https://files.pythonhosted.org/packages/d6/2f/e4763555e3b8c66805090147956f57f0d134a67fb8aaccadcebec7362425/jax_md-0.2.29-py3-none-any.whl"
+      ],
+      "scope": {
+        "observed": "Initial two-atom soft-sphere regression; supplemental two-atom LJ at r=1.3, epsilon=sigma=1, cutoff=2.5.",
+        "conclusion": "The reproduced per-atom energy sum disagrees with the same output total. This is separate from F001 atomic-force accumulation.",
+        "excluded": "No claim that all permissible per-atom energy partitions must be identical across engines."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "docs/findings/F002.md",
+        "reproductions/run_other_findings.py",
+        "evidence/force-doubling/jaxmd.json"
+      ],
+      "native_comparisons": {
+        "ASE": "executed_native_lj_internal_allocation_control",
+        "LAMMPS": "not_run",
+        "JAX MD": "executed_native_lj_per_particle_sum; inspected_in_force_evidence",
+        "TorchMD": "not_applicable_in_included_interface"
+      },
+      "observed_values": {
+        "torchsim_total": -0.6570169144600471,
+        "torchsim_atom_sum": -1.3140338289200941,
+        "ase_total": -0.6407000233240471,
+        "ase_atom_sum": -0.6407000233240471
+      },
+      "primary_documentation_urls": [
+        "https://docs.ase-lib.org/_modules/ase/calculators/lj.html",
+        "https://docs.lammps.org/compute_pe_atom.html"
+      ]
+    },
+    {
+      "id": "F003",
+      "title": "Fractional soft-sphere differentiation is nonfinite outside a species cutoff",
+      "classification": "nonfinite_derivative_defect",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "observed_nonfinite_derivative_native_jax_reference_separate"
+      },
+      "affected_paths": [
+        "torch_sim.models.soft_sphere.MultiSoftSpherePairFn.forward",
+        "SoftSphereMultiModel via PairPotentialModel differentiation"
+      ],
+      "control_paths": [
+        "Finite zero force outside pair-specific sigma",
+        "JAX MD native fractional soft-sphere gradient"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/soft_sphere.py#L149-L168",
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/models/pair_potential.py#L398-L428",
+        "https://pypi.org/project/jax-md/0.2.29/",
+        "https://files.pythonhosted.org/packages/d6/2f/e4763555e3b8c66805090147956f57f0d134a67fb8aaccadcebec7362425/jax_md-0.2.29-py3-none-any.whl"
+      ],
+      "scope": {
+        "observed": "alpha=2.5, Ar-Ar r=1.5 beyond pair sigma=1, retained by a global cutoff=2 due to another species.",
+        "conclusion": "A finite masked energy does not ensure a finite differentiated force when the inactive fractional-power branch is invalid.",
+        "excluded": "No blanket failure for integer exponents or configurations whose pair is removed by the global list cutoff."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "evidence/other-findings/jaxmd.json",
+        "docs/findings/F003.md",
+        "reproductions/run_other_findings.py",
+        "reproductions/native_jaxmd.py"
+      ],
+      "native_comparisons": {
+        "ASE": "not_applicable_no_matched_native_potential_included",
+        "LAMMPS": "not_applicable_no_equivalent_native_potential_configured",
+        "JAX MD": "executed_matched_native_fractional_soft_sphere",
+        "TorchMD": "not_applicable_no_matched_native_potential_included"
+      },
+      "observed_values": {
+        "nonfinite_force_components": 6,
+        "torchsim_energy": 0.0,
+        "native_jax_forces": "all_zero"
+      },
+      "primary_documentation_urls": [
+        "https://jax-md.readthedocs.io/en/main/jax_md.energy.html#jax_md.energy.soft_sphere_pair"
+      ]
+    },
+    {
+      "id": "F004",
+      "title": "Per-system timesteps broadcast along Cartesian coordinates",
+      "classification": "batched_argument_handling_defect",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "observed_per_system_broadcast_error_with_native_control"
+      },
+      "affected_paths": [
+        "torch_sim.integrators.md.position_step",
+        "torch_sim.integrators.md.momentum_step",
+        "torch_sim.integrators.nve.nve_step"
+      ],
+      "control_paths": [
+        "Zero-force displacement x_new=x_old+v*dt_for_system",
+        "Independent scalar-timestep runs per system",
+        "ASE native VelocityVerlet, separate systems"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/integrators/md.py#L175-L208",
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/integrators/nve.py#L74-L130",
+        "https://pypi.org/project/ase/3.29.0/"
+      ],
+      "scope": {
+        "observed": "Three systems with dt=[0.1,0.2,0.3], six atoms, three Cartesian components, zero force.",
+        "conclusion": "The documented per-system vector broadcasts onto coordinates instead of indexing each atom system in the reproduced shape.",
+        "excluded": "No claim of scalar-timestep failure or equivalent batched-dt contracts in other engines."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "docs/findings/F004.md",
+        "reproductions/run_other_findings.py"
+      ],
+      "native_comparisons": {
+        "ASE": "executed_separate_native_scalar_trajectories; internal_time_units",
+        "LAMMPS": "not_applicable_to_torchsim_batched_contract; not_run",
+        "JAX MD": "not_applicable_to_torchsim_batched_contract; not_run",
+        "TorchMD": "not_applicable_to_torchsim_batched_contract; not_run"
+      },
+      "observed_values": {
+        "max_position_error": 0.19999999999999998,
+        "native_ase_max_position_error": 0.0,
+        "scalar_timestep_errors": [
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "primary_documentation_urls": [
+        "https://docs.ase-lib.org/ase/md.html#ase.md.verlet.VelocityVerlet"
+      ]
+    },
+    {
+      "id": "F005",
+      "title": "Unequal-mass initialization differs from common-velocity COM removal",
+      "classification": "qualified_initialization_convention_discrepancy",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "qualified_initialization_convention_and_distribution_finding"
+      },
+      "affected_paths": [
+        "torch_sim.integrators.md.initialize_momenta"
+      ],
+      "control_paths": [
+        "Common-velocity correction p_i - m_i*P/M",
+        "ASE Stationary(preserve_temperature=False)",
+        "Check TorchSim total momentum remains zero",
+        "JAX MD 0.2.29 initialize_momenta shares mean-momentum subtraction"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/integrators/md.py#L113-L171",
+        "https://pypi.org/project/ase/3.29.0/",
+        "https://pypi.org/project/jax-md/0.2.29/",
+        "https://files.pythonhosted.org/packages/d6/2f/e4763555e3b8c66805090147956f57f0d134a67fb8aaccadcebec7362425/jax_md-0.2.29-py3-none-any.whl"
+      ],
+      "scope": {
+        "observed": "Seeded two-atom initialization with masses [1,4] differs from the common-velocity projection.",
+        "conclusion": "A convention difference for unequal masses. A measured variance discrepancy is conditional on canonical Gaussian momenta conditioned on zero total momentum. COM motion is removed.",
+        "excluded": "No unanimous cross-library agreement or unconditional correctness-defect claim."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "evidence/other-findings/jaxmd.json",
+        "docs/findings/F005.md",
+        "reproductions/run_other_findings.py",
+        "reproductions/native_jaxmd.py"
+      ],
+      "native_comparisons": {
+        "ASE": "executed_native_common_velocity_projection",
+        "LAMMPS": "not_run",
+        "JAX MD": "executed_native_counterexample_same_mean_momentum_projection",
+        "TorchMD": "not_run"
+      },
+      "qualification": "Both p_i-P/N and p_i-m_i*P/M sum to zero. Only the latter preserves relative velocities by subtracting one common velocity. Stronger claims depend on intended ensemble or contract.",
+      "observed_values": {
+        "max_projection_difference": 0.7901322663896455,
+        "mean_projection_variance": [
+          1.25,
+          1.25
+        ],
+        "mass_weighted_conditioned_gaussian_variance": [
+          0.8,
+          0.8
+        ],
+        "torchsim_ensemble_variance": [
+          1.2510351317695345,
+          1.2510351317695347
+        ],
+        "ensemble_count": 32768
+      },
+      "primary_documentation_urls": [
+        "https://docs.ase-lib.org/_modules/ase/md/velocitydistribution.html#Stationary"
+      ]
+    },
+    {
+      "id": "F006",
+      "title": "ASE export loses explicit custom or isotope masses",
+      "classification": "io_data_preservation_defect",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "observed_mass_loss_with_native_io_control"
+      },
+      "affected_paths": [
+        "torch_sim.io.state_to_atoms"
+      ],
+      "control_paths": [
+        "atoms_to_state retains input custom masses",
+        "ASE native mass-preserving round trip"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/io.py#L39-L123",
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/io.py#L283-L373",
+        "https://pypi.org/project/ase/3.29.0/"
+      ],
+      "scope": {
+        "observed": "Hydrogen atoms with explicit masses [2.014,2.014] imported into SimState then exported to ASE.",
+        "conclusion": "The tested export reconstructs Atoms without preserving explicit masses.",
+        "excluded": "No claim about every IO format or independent engines not using this conversion endpoint."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "docs/findings/F006.md",
+        "reproductions/run_other_findings.py"
+      ],
+      "native_comparisons": {
+        "ASE": "executed_native_mass_preserving_trajectory_round_trip",
+        "LAMMPS": "not_applicable_different_conversion_endpoint",
+        "JAX MD": "not_applicable_different_conversion_endpoint",
+        "TorchMD": "not_applicable_different_conversion_endpoint"
+      },
+      "observed_values": {
+        "input_masses": [
+          2.014,
+          2.014
+        ],
+        "exported_masses": [
+          1.008,
+          1.008
+        ],
+        "native_ase_roundtrip_masses": [
+          2.014,
+          2.014
+        ]
+      },
+      "primary_documentation_urls": [
+        "https://docs.ase-lib.org/ase/io/trajectory.html"
+      ]
+    },
+    {
+      "id": "F007",
+      "title": "State-list initialization ignores requested dtype conversion",
+      "classification": "api_conversion_inconsistency",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "observed_api_dtype_inconsistency"
+      },
+      "affected_paths": [
+        "torch_sim.state.initialize_state: list or tuple of SimState inputs"
+      ],
+      "control_paths": [
+        "Single SimState input with requested dtype",
+        "Explicit SimState.to conversion"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/state.py#L1554-L1583"
+      ],
+      "scope": {
+        "observed": "List of two float32 CPU states passed with requested dtype=float64.",
+        "conclusion": "The list branch returns concatenation without applying the conversion requested from the same API.",
+        "excluded": "No accelerator device result claimed; device argument omission is source exposure only."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "docs/findings/F007.md",
+        "reproductions/run_other_findings.py"
+      ],
+      "native_comparisons": {
+        "ASE": "not_applicable_torchsim_specific_state_api",
+        "LAMMPS": "not_applicable_torchsim_specific_state_api",
+        "JAX MD": "not_applicable_torchsim_specific_state_api",
+        "TorchMD": "not_applicable_torchsim_specific_state_api"
+      },
+      "observed_values": {
+        "requested_dtype": "torch.float64",
+        "single_dtype": "torch.float64",
+        "list_dtype": "torch.float32"
+      },
+      "primary_documentation_urls": []
+    },
+    {
+      "id": "F008",
+      "title": "Rejected swap retains model extras evaluated on the rejected proposal",
+      "classification": "returned_state_observable_inconsistency",
+      "evidence_status": {
+        "initial_regression": "reproduced_in_original_audit",
+        "repository_reproduction": "completed_live_run; saved_evidence_validated",
+        "observation_status": "observed_returned_state_extra_inconsistency"
+      },
+      "affected_paths": [
+        "torch_sim.monte_carlo.swap_mc_step: model extras after rejection"
+      ],
+      "control_paths": [
+        "Returned positions and energy restore preproposal state",
+        "Fresh model evaluation on returned state"
+      ],
+      "source_pinned_urls": [
+        "https://github.com/TorchSim/torch-sim/blob/d6d8e9fc30129e01a05b551c2d71912821c9b68b/torch_sim/monte_carlo.py#L240-L308"
+      ],
+      "scope": {
+        "observed": "Deterministic two-atom synthetic site-signal model, sole uphill swap, kT=1e-6, seeded proposal.",
+        "conclusion": "Positions and energy revert while a stored per-atom extra describes the rejected proposal.",
+        "excluded": "No claim that every external engine exposes the same model-extras state contract, or that acceptance energies are wrong."
+      },
+      "refs": [
+        "evidence/other-findings/results.json",
+        "tests/test_other_findings.py",
+        "docs/findings/F008.md",
+        "reproductions/run_other_findings.py"
+      ],
+      "native_comparisons": {
+        "ASE": "not_applicable_no_matching_model_extras_api_included",
+        "LAMMPS": "not_applicable_no_matching_model_extras_api_included",
+        "JAX MD": "not_applicable_no_matching_model_extras_api_included",
+        "TorchMD": "not_applicable_no_matching_model_extras_api_included"
+      },
+      "observed_values": {
+        "returned_signal": [
+          1.0,
+          0.0
+        ],
+        "reevaluated_signal": [
+          0.0,
+          2.0
+        ],
+        "acceptance_probability": 0.0
+      },
+      "primary_documentation_urls": []
+    }
+  ]
+}

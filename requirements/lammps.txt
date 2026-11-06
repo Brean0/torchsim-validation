@@ -1,0 +1,3 @@
+# Exact versions from the executed Python 3.12 CPU environment.
+lammps==2025.7.22.4.0
+mpich==5.0.2

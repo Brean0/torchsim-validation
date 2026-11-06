@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "engine": "JAX MD",
+  "version": "0.2.29",
+  "jax_version": "0.12.0.1",
+  "jaxlib_version": "0.12.0.1",
+  "backend": "cpu",
+  "dtype": "float64",
+  "x64_enabled": true,
+  "source_distribution": "https://files.pythonhosted.org/packages/d6/2f/e4763555e3b8c66805090147956f57f0d134a67fb8aaccadcebec7362425/jax_md-0.2.29-py3-none-any.whl",
+  "source_release": "https://pypi.org/project/jax-md/0.2.29/",
+  "source_file_sha256": {
+    "jax_md/energy.py": "eabb5a001075946dbd3c2cb0327690cbc435ff9a12960a507150cf3d7f63db61",
+    "jax_md/simulate.py": "ab15aaa9ec3034a253176b8d722a0b0f3e93d873e773e9ae33fe4e2588bcc618"
+  },
+  "fractional_soft_sphere": {
+    "api": "jax_md.energy.soft_sphere_pair + jax_md.quantity.force",
+    "positions": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        1.5,
+        0.0,
+        0.0
+      ],
+      [
+        5.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "species": [
+      0,
+      0,
+      1
+    ],
+    "sigma_matrix": [
+      [
+        1.0,
+        2.0
+      ],
+      [
+        2.0,
+        2.0
+      ]
+    ],
+    "epsilon": 1.0,
+    "alpha": 2.5,
+    "energy": 0.0,
+    "forces": [
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0
+      ]
+    ],
+    "scope": "same species-dependent sigma and fractional alpha; all pairs outside interaction support"
+  },
+  "unequal_mass_initialization": {
+    "api": "jax_md.simulate.initialize_momenta",
+    "masses": [
+      1.0,
+      4.0
+    ],
+    "kT": 1.0,
+    "seed": 4,
+    "raw_momenta": [
+      [
+        -0.8997384814203118,
+        -1.0780287193109412,
+        0.24781776855746204
+      ],
+      [
+        -0.5472356227411473,
+        -1.5831777976306372,
+        -3.589616282553947
+      ]
+    ],
+    "initialized_momenta": [
+      [
+        -0.17625142933958227,
+        0.25257453915984796,
+        1.9187170255557044
+      ],
+      [
+        0.17625142933958216,
+        -0.25257453915984796,
+        -1.9187170255557044
+      ]
+    ],
+    "total_momentum": [
+      -1.1102230246251565e-16,
+      0.0,
+      0.0
+    ],
+    "mean_projection_max_error": 0.0,
+    "ase_style_projection_max_error": 1.0025395541989457,
+    "conclusion": "JAX MD shares TorchSim's mean-momentum projection; both remove COM momentum. This qualifies F005, not unanimous bug corroboration."
+  }
+}

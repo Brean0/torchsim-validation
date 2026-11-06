@@ -1,0 +1,103 @@
+{
+  "engine": "ASE native ase.calculators.lj.LennardJones",
+  "version": "3.29.0",
+  "source": "https://gitlab.com/ase/ase/-/tree/3.29.0",
+  "parameters": {
+    "epsilon": 1.0,
+    "sigma": 1.0,
+    "rc": 2.5,
+    "smooth": false
+  },
+  "units": {
+    "distance": "sigma",
+    "forces": "F*sigma/epsilon",
+    "energy": "epsilon"
+  },
+  "convention": "Native energy shifted at rc; force below rc unchanged. Energies are not cross-engine compared.",
+  "cases": [
+    {
+      "distance": 1.1,
+      "forces": [
+        [
+          -1.5880953898240562,
+          0.0,
+          0.0
+        ],
+        [
+          1.5880953898240562,
+          0.0,
+          0.0
+        ]
+      ],
+      "energy": -0.9670555582376826,
+      "per_particle_energy": [
+        -0.4835277791188413,
+        -0.4835277791188413
+      ]
+    },
+    {
+      "distance": 1.3,
+      "forces": [
+        [
+          2.239979929791143,
+          0.0,
+          0.0
+        ],
+        [
+          -2.239979929791143,
+          0.0,
+          0.0
+        ]
+      ],
+      "energy": -0.6407000233240471,
+      "per_particle_energy": [
+        -0.32035001166202354,
+        -0.32035001166202354
+      ]
+    },
+    {
+      "distance": 1.5,
+      "forces": [
+        [
+          1.1580288310461555,
+          0.0,
+          0.0
+        ],
+        [
+          -1.1580288310461555,
+          0.0,
+          0.0
+        ]
+      ],
+      "energy": -0.3040197031425746,
+      "per_particle_energy": [
+        -0.1520098515712873,
+        -0.1520098515712873
+      ]
+    }
+  ],
+  "configuration_original": {
+    "epsilon": 1.0,
+    "sigma": 1.0,
+    "rc": 2.5,
+    "smooth": false
+  },
+  "configuration": {
+    "potential": "lennard_jones",
+    "epsilon": 1.0,
+    "sigma": 1.0,
+    "cutoff": 2.5,
+    "pbc": false,
+    "device": "cpu",
+    "dtype": "float64",
+    "geometry": "atom 0 at [0,0,0]; atom 1 at [r,0,0]"
+  },
+  "units_original": {
+    "distance": "Angstrom",
+    "energy": "eV",
+    "force": "eV/Angstrom"
+  },
+  "python": "3.12.9",
+  "platform": "macOS-15.1-arm64-arm-64bit",
+  "snapshot_origin": "native-library execution of references/ collectors"
+}

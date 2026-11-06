@@ -1,0 +1,30 @@
+{
+  "description": "Original executed audit adapters; relative labels only, no original machine paths.",
+  "original_scripts": [
+    {
+      "adapter": "native_torchsim.py",
+      "original_label": "core/torchsim_forces.py",
+      "original_sha256": "19a3e26d9771bf5a14cc6cef37f3b164ee048b3e37016e05f6ef9739ba4e88e1"
+    },
+    {
+      "adapter": "native_ase.py",
+      "original_label": "ase_lammps/ase_native.py",
+      "original_sha256": "99170570c52f60efc95fa608e56eb33cbf60f7b1db4ee32a7a0418a9c0c183b9"
+    },
+    {
+      "adapter": "native_lammps.py",
+      "original_label": "ase_lammps/lammps_native.py",
+      "original_sha256": "4ae0d54e2b1015219563e8975e8e4e3cf834e9fd27329e4f2fb2183dca8d07f9"
+    },
+    {
+      "adapter": "native_jaxmd.py",
+      "original_label": "jaxmd/reference.py",
+      "original_sha256": "476f9690865d0afbabdc0fb14c1f0b805332d465629e81058cb3d5d90f6eac98"
+    },
+    {
+      "adapter": "native_torchmd.py",
+      "original_label": "torchmd/reference.py",
+      "original_sha256": "b2870b8f8f1505e3646a805b7b7a3a480fc21fe6fd84c33df21fb24e01372a77"
+    }
+  ]
+}
