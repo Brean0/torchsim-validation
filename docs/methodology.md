@@ -38,3 +38,22 @@ The force evidence retains versions, settings, vectors, and package/source ident
 These small deterministic cases establish the behavior reported here. Other potentials, materials, GPU kernels, periodic geometries, dynamics and sampling workflows remain unverified. Downstream scientific results, user harm and published calculations were outside this audit. A correct control for F001 does not certify other outputs from that class: `PairPotentialModel`'s forces can pass while its optional per-atom energy allocation fails F002.
 
 F005 depends on the intended initialization semantics. TorchSim subtracts mean momentum, which **does make total momentum and center-of-mass velocity zero** for the reproduced multi-atom system. ASE's usual common-velocity subtraction instead removes `m_i*P/M` from each momentum and preserves relative velocities. These differ for unequal masses. The pinned native JAX MD initialization was also run and subtracts mean momentum. The supplemental ensemble check quantifies the resulting variance difference under an explicit conditioned-canonical-Gaussian assumption. The reproduced difference therefore supports a qualified discussion of initialization semantics. Both methods remove COM motion, and the external libraries do not unanimously disagree with TorchSim.
+
+## Source-history dates
+
+The README tables link to the earliest confirmed affected source snapshots. The dates were checked by inspecting older function bodies, following moves through Git history and checking tag ancestry. Historical releases were not each executed. A date marked "By" is a conservative bound, and F005 dates an initialization convention whose intended behavior remains qualified.
+
+F001, F002 and F003 are present in the March 2, 2026 general-pair implementation, before the [March 5 helper reorganization](https://github.com/TorchSim/torch-sim/commit/84986c1830c63fad48e740d4e994c4069e48d08d). F004's multiplication appears in the initial March 3, 2025 batched code; March 24 is the conservative confirmation date because the vector-timestep contract is explicit there. F006's March 3, 2025 exporter predates its later move into `torch_sim/io.py`.
+
+The first GitHub release containing F001, F002, F003 and F008 is [v0.6.0, published April 24, 2026](https://github.com/TorchSim/torch-sim/releases/tag/v0.6.0). F004, F005 and F006 are present in [v0.1.0, published April 3, 2025](https://github.com/TorchSim/torch-sim/releases/tag/v0.1.0); F007 is present in [v0.4.0, published October 9, 2025](https://github.com/TorchSim/torch-sim/releases/tag/v0.4.0). These are GitHub release publication dates, which can differ from source, package-index and archival dates.
+
+The history checks included:
+
+```sh
+git log --reverse -S 'def state_to_atoms' -- '*.py'
+git show e8bc7a3b:torch_sim/models/pair_potential.py
+git show fac94af:torchsim/runners.py
+git show 1424be5:torch_sim/integrators.py
+git tag --contains e8bc7a3b --sort=version:refname
+gh api repos/TorchSim/torch-sim/releases --jq '.[] | {tag_name,published_at}'
+```

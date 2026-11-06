@@ -8,31 +8,25 @@ Audited TorchSim commit: [`d6d8e9fc30129e01a05b551c2d71912821c9b68b`](https://gi
 
 These five findings have native reference comparisons supporting the reported discrepancy. Each links to its own report with the setup, observed result, source location and reproduction commands. The evidence differs by case; F001 is the completed five-library comparison.
 
-| ID | Finding | Native reference evidence | Upstream PR |
-|---|---|---|---|
-| [F001](docs/findings/F001.md) | Default direct-force accumulation doubles symmetric pair forces | ASE, LAMMPS, JAX MD and TorchMD agree; TorchSim's energy-derived and half-list controls also agree | [#634](https://github.com/TorchSim/torch-sim/pull/634) |
-| [F002](docs/findings/F002.md) | Per-atom energies sum to twice the reported total | Native ASE energy-allocation control; JAX MD per-particle data retained | [#635](https://github.com/TorchSim/torch-sim/pull/635) |
-| [F003](docs/findings/F003.md) | Fractional soft-sphere differentiation produces nonfinite forces outside a species cutoff | Native JAX MD returns finite zero forces for the matched configuration | [#636](https://github.com/TorchSim/torch-sim/pull/636) |
-| [F004](docs/findings/F004.md) | Per-system timesteps broadcast onto coordinate axes | Independent native ASE scalar-timestep runs provide the displacement control | [#637](https://github.com/TorchSim/torch-sim/pull/637) |
-| [F006](docs/findings/F006.md) | ASE export drops explicit isotope or custom masses | A native ASE mass-preserving round trip retains the input masses | [#638](https://github.com/TorchSim/torch-sim/pull/638) |
+| ID | Finding | Introduced / present by | Native reference evidence | Upstream PR |
+|---|---|---|---|---|
+| [F001](docs/findings/F001.md) | Default direct-force accumulation doubles symmetric pair forces | [2026-03-02](https://github.com/TorchSim/torch-sim/commit/e8bc7a3b7c15906464721e4e8589e6b81fadc446) | ASE, LAMMPS, JAX MD and TorchMD agree; TorchSim's energy-derived and half-list controls also agree | [#634](https://github.com/TorchSim/torch-sim/pull/634) |
+| [F002](docs/findings/F002.md) | Per-atom energies sum to twice the reported total | [2026-03-02](https://github.com/TorchSim/torch-sim/commit/e8bc7a3b7c15906464721e4e8589e6b81fadc446) | Native ASE energy-allocation control; JAX MD per-particle data retained | [#635](https://github.com/TorchSim/torch-sim/pull/635) |
+| [F003](docs/findings/F003.md) | Fractional soft-sphere differentiation produces nonfinite forces outside a species cutoff | [2026-03-02](https://github.com/TorchSim/torch-sim/commit/e8bc7a3b7c15906464721e4e8589e6b81fadc446) | Native JAX MD returns finite zero forces for the matched configuration | [#636](https://github.com/TorchSim/torch-sim/pull/636) |
+| [F004](docs/findings/F004.md) | Per-system timesteps broadcast onto coordinate axes | By [2025-03-24](https://github.com/TorchSim/torch-sim/commit/1424be591a32783b3b33c284f0eef059d4f33321) | Independent native ASE scalar-timestep runs provide the displacement control | [#637](https://github.com/TorchSim/torch-sim/pull/637) |
+| [F006](docs/findings/F006.md) | ASE export drops explicit isotope or custom masses | [2025-03-03](https://github.com/TorchSim/torch-sim/commit/fac94afcc639fd0f4661ebe55a906c804c4246be) | A native ASE mass-preserving round trip retains the input masses | [#638](https://github.com/TorchSim/torch-sim/pull/638) |
+
+Dates link to the earliest confirmed affected source, rather than a release date. For F004, March 24 confirms the explicit per-system timestep contract; the multiplication existed earlier. The [methodology](docs/methodology.md#source-history-dates) explains how the dates were checked.
 
 ## Other reproduced observations
 
 These cases use state or API consistency checks, or require further interpretation of the intended behavior.
 
-| ID | Finding | Evidence and status |
-|---|---|---|
-| [F007](docs/findings/F007.md) | State-list initialization ignores the requested dtype conversion | Reproduced CPU API inconsistency: the same request works for a single state |
-| [F008](docs/findings/F008.md) | A rejected Monte Carlo swap retains properties from the rejected proposal | Reproduced returned-state inconsistency, checked against a fresh model evaluation |
-| [F005](docs/findings/F005.md) | Unequal-mass initialization differs from common-velocity drift removal | Qualified: ASE uses a different projection, while JAX MD shares TorchSim's rule; both remove total momentum |
-
-The initial audit produced eight reproducible findings. They are a bounded inventory, with the evidence and limits tracked in [findings.json](findings.json) and the [coverage matrix](docs/coverage.md). A missing equivalent feature in another library is marked **not applicable**.
-
-For F001, there is **one independently corroborated force-accumulation root cause**, exposed through at least two named public classes: `PairForcesModel` and its `ParticleLifeModel` subclass. Those entry points count as one defect. The total number of defects in TorchSim, affected users and effects on published research remain unknown.
-
-The [source and release history](docs/history.md) records how long the affected implementations have existed, with historical-runtime limits stated separately. Each report also includes a proposed change.
-
-Reports for these five findings link to their submitted PRs, implementation patches and verification results. The [one-page overview](output/pdf/torchsim-validation-overview.pdf) summarizes the findings without code or setup instructions.
+| ID | Finding | Present by | Evidence and status |
+|---|---|---|---|
+| [F007](docs/findings/F007.md) | State-list initialization ignores the requested dtype conversion | By [2025-10-09](https://github.com/TorchSim/torch-sim/commit/9151970697a7e3e2a7486b0fd335e9ffc670538e) | Reproduced CPU API inconsistency: the same request works for a single state |
+| [F008](docs/findings/F008.md) | A rejected Monte Carlo swap retains properties from the rejected proposal | [2026-04-09](https://github.com/TorchSim/torch-sim/commit/8e920141fd4235a36f1fd79dda782f4612a18773) | Reproduced returned-state inconsistency, checked against a fresh model evaluation |
+| [F005](docs/findings/F005.md) | Unequal-mass initialization differs from common-velocity drift removal | [2025-03-03](https://github.com/TorchSim/torch-sim/commit/fac94afcc639fd0f4661ebe55a906c804c4246be) (convention) | Qualified: ASE uses a different projection, while JAX MD shares TorchSim's rule; both remove total momentum |
 
 ## Run the checks
 
