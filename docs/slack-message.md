@@ -1,6 +1,6 @@
 # Slack message draft
 
-Sharing five TorchSim bugs I reproduced and checked against independent native reference calculations. I've prepared a separate fix and regression tests for each, with the inputs, measured results and methodology in the validation repo:
+Sharing five TorchSim bugs I reproduced and checked against independent native reference calculations. I've opened a separate PR with a fix and regression tests for each, with the inputs, measured results and methodology in the validation repo:
 
 https://github.com/Brean0/torchsim-validation
 
@@ -10,4 +10,4 @@ The strongest comparison is the force case: ASE, LAMMPS, JAX MD and TorchMD agre
 
 I've also documented three additional findings separately: two reproduced API/state consistency issues and one qualified initialization difference. The initialization case needs discussion of the intended convention because JAX MD shares TorchSim's rule while ASE uses a different one.
 
-The repo includes a one-page overview and the proposed changes. I'd appreciate a maintainer review of the findings and fixes.
+The repo includes a one-page overview, the proposed changes and links to all five PRs. I'd appreciate a maintainer review of the findings and fixes.

@@ -27,9 +27,20 @@ To run live supplemental tests, use the installed TorchSim/ASE environment for t
 
 Successful evidence validation confirms the recorded discrepancies and controls. It does not establish that upstream defects are fixed or certify untested workflows or platforms.
 
+## Submitted implementation changes
 
-## Prepared implementation changes
+Five separate upstream PRs contain the proposed repairs and regression tests for F001, F002, F003, F004 and F006. Each [finding report](findings/) links to its PR and patch. The final full default pytest suite was freshly rerun on every exact submitted commit after all regression additions.
 
-Five separate local branches now contain proposed repairs and regression tests for F001, F002, F003, F004 and F006. The [PR index](../pull-requests/README.md) links to each patch and draft and records the focused and repository-wide test results, skipped coverage and warnings. All five patches were independently checked for application against the exact audited base; the original checkout has no tracked implementation changes.
+| Finding | Upstream PR | Focused checks | Final full default suite |
+|---|---|---|---|
+| [F001](findings/F001.md) | [#634](https://github.com/TorchSim/torch-sim/pull/634) | 51 passed | 1009 passed, 208 skipped |
+| [F002](findings/F002.md) | [#635](https://github.com/TorchSim/torch-sim/pull/635) | 59 passed | 1011 passed, 208 skipped |
+| [F003](findings/F003.md) | [#636](https://github.com/TorchSim/torch-sim/pull/636) | 44 passed | 1007 passed, 208 skipped |
+| [F004](findings/F004.md) | [#637](https://github.com/TorchSim/torch-sim/pull/637) | 47 passed | 1019 passed, 208 skipped |
+| [F006](findings/F006.md) | [#638](https://github.com/TorchSim/torch-sim/pull/638) | 121 passed | 1005 passed, 208 skipped |
 
-Independent cross-review found no production correctness blocker. It prompted stronger committed controls for unequal system sizes, nonzero active soft-sphere interactions and asymmetric source-force accumulation. The last test-only additions were checked with the focused suites and Ruff; earlier full-suite results remain labeled as such. The PDF was rendered and visually inspected after its final wording update, and its page count is one.
+All five final changes pass Ruff 0.17.1 lint and format checks, whitespace checks and patch-application checks against the exact audited base. Each PR contains one commit and changes only its implementation file and corresponding tests. The original audit checkout has no tracked implementation changes.
+
+These runs used Python 3.12.9 on macOS CPU. The skipped tests cover unavailable optional dependencies and platform-specific cases; GPU and long-running physical validation were not performed. Each full run emitted three PyTables unclosed-file cleanup warnings after the test summary. The coverage-enabled command was unavailable because `pytest-cov` was absent; the plain full suite passed.
+
+Independent cross-review found no production correctness blocker. It prompted stronger committed controls for unequal system sizes, nonzero active soft-sphere interactions and asymmetric source-force accumulation. The PDF was rendered and visually inspected after its final wording update, and its page count is one.

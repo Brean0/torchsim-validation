@@ -2,19 +2,19 @@
 
 This repo documents selected TorchSim findings and provides the code, inputs and results needed to check them. Working controls are included so each discrepancy can be traced to a specific implementation or option.
 
-Audited TorchSim commit: [`d6d8e9fc30129e01a05b551c2d71912821c9b68b`](https://github.com/TorchSim/torch-sim/commit/d6d8e9fc30129e01a05b551c2d71912821c9b68b). It was still upstream `main` when checked on November 6, 2026. The repo contains validation evidence and separately prepared local fix proposals; the audited upstream implementation and upstream submission history are unchanged.
+Audited TorchSim commit: [`d6d8e9fc30129e01a05b551c2d71912821c9b68b`](https://github.com/TorchSim/torch-sim/commit/d6d8e9fc30129e01a05b551c2d71912821c9b68b). It was still upstream `main` when checked on November 6, 2026. The repo contains validation evidence and five submitted upstream fixes. The audit evidence remains pinned to the affected implementation; each submitted finding links to its PR and validation results.
 
 ## Findings with native reference controls
 
 These five findings have native reference comparisons supporting the reported discrepancy. Each links to its own report with the setup, observed result, source location and reproduction commands. The evidence differs by case; F001 is the completed five-library comparison.
 
-| ID | Finding | Native reference evidence |
-|---|---|---|
-| [F001](docs/findings/F001.md) | Default direct-force accumulation doubles symmetric pair forces | ASE, LAMMPS, JAX MD and TorchMD agree; TorchSim's energy-derived and half-list controls also agree |
-| [F002](docs/findings/F002.md) | Per-atom energies sum to twice the reported total | Native ASE energy-allocation control; JAX MD per-particle data retained |
-| [F003](docs/findings/F003.md) | Fractional soft-sphere differentiation produces nonfinite forces outside a species cutoff | Native JAX MD returns finite zero forces for the matched configuration |
-| [F004](docs/findings/F004.md) | Per-system timesteps broadcast onto coordinate axes | Independent native ASE scalar-timestep runs provide the displacement control |
-| [F006](docs/findings/F006.md) | ASE export drops explicit isotope or custom masses | A native ASE mass-preserving round trip retains the input masses |
+| ID | Finding | Native reference evidence | Upstream PR |
+|---|---|---|---|
+| [F001](docs/findings/F001.md) | Default direct-force accumulation doubles symmetric pair forces | ASE, LAMMPS, JAX MD and TorchMD agree; TorchSim's energy-derived and half-list controls also agree | [#634](https://github.com/TorchSim/torch-sim/pull/634) |
+| [F002](docs/findings/F002.md) | Per-atom energies sum to twice the reported total | Native ASE energy-allocation control; JAX MD per-particle data retained | [#635](https://github.com/TorchSim/torch-sim/pull/635) |
+| [F003](docs/findings/F003.md) | Fractional soft-sphere differentiation produces nonfinite forces outside a species cutoff | Native JAX MD returns finite zero forces for the matched configuration | [#636](https://github.com/TorchSim/torch-sim/pull/636) |
+| [F004](docs/findings/F004.md) | Per-system timesteps broadcast onto coordinate axes | Independent native ASE scalar-timestep runs provide the displacement control | [#637](https://github.com/TorchSim/torch-sim/pull/637) |
+| [F006](docs/findings/F006.md) | ASE export drops explicit isotope or custom masses | A native ASE mass-preserving round trip retains the input masses | [#638](https://github.com/TorchSim/torch-sim/pull/638) |
 
 ## Other reproduced observations
 
@@ -32,7 +32,7 @@ For F001, there is **one independently corroborated force-accumulation root caus
 
 The [source and release history](docs/history.md) records how long the affected implementations have existed, with historical-runtime limits stated separately. Each report also includes a proposed change.
 
-The [local PR review package](pull-requests/README.md) contains five separate proposed fixes, regression tests and draft descriptions. The [one-page overview](output/pdf/torchsim-validation-overview.pdf) summarizes the findings without code or setup instructions.
+Reports for these five findings link to their submitted PRs, implementation patches and verification results. The [one-page overview](output/pdf/torchsim-validation-overview.pdf) summarizes the findings without code or setup instructions.
 
 ## Run the checks
 
@@ -79,7 +79,7 @@ An interaction model supplies an energy or force law. The simulation library han
 
 The ASE, LAMMPS, JAX MD and TorchMD probes call their native implementations. They neither import TorchSim nor implement its force formula. Units, cutoff switches and energy shifts are matched or accounted for before results are compared. [The methodology](docs/methodology.md) explains those choices and the conclusions each type of evidence supports.
 
-Future upstream PRs should address demonstrated root causes and include the relevant reproduction, version and source references. The qualified initialization finding needs its intended distribution stated before a universal defect is claimed.
+The five submitted upstream PRs address the demonstrated root causes and include the relevant reproduction, version and source references. The qualified initialization finding needs its intended distribution stated before a universal defect is claimed.
 
 ## Files
 
@@ -89,4 +89,5 @@ Future upstream PRs should address demonstrated root causes and include the rele
 - `evidence/`: numerical results and provenance, with machine paths removed.
 - `reproductions/`: supplemental cases.
 - `tests/`: checks that the evidence consumer rejects invalid or contradictory data.
-- `docs/`: methodology, coverage and individual finding reports.
+- `docs/`: methodology, coverage, individual finding reports and upstream PR links.
+- `patches/`: submitted implementation changes and regression tests.

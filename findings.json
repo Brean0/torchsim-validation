@@ -95,7 +95,29 @@
         "https://docs.ase-lib.org/_modules/ase/calculators/lj.html",
         "https://jax-md.readthedocs.io/en/main/jax_md.energy.html#jax_md.energy.lennard_jones_pair",
         "https://jax-md.readthedocs.io/en/main/jax_md.quantity.html#jax_md.quantity.force"
-      ]
+      ],
+      "upstream_submission": {
+        "url": "https://github.com/TorchSim/torch-sim/pull/634",
+        "number": 634,
+        "state": "open",
+        "checked_on": "2026-11-06",
+        "head_repository": "Brean0/torch-sim",
+        "branch": "brian/fix-pair-force-accumulation",
+        "commit": "3d78958551a80718db99b6d874d621daa4847c3f",
+        "base": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+        "patch": "patches/F001.patch",
+        "patch_sha256": "f65bf7d2065fd280aac35dc78ead109959b832430b47e1edf671accbe3ebba4f",
+        "validation": {
+          "focused_passed": 51,
+          "final_full_suite_passed": 1009,
+          "final_full_suite_skipped": 208,
+          "ruff_version": "0.17.1",
+          "ruff_lint_and_format": "passed",
+          "platform": "macOS CPU",
+          "python": "3.12.9",
+          "full_suite_cleanup_warnings": 3
+        }
+      }
     },
     {
       "id": "F002",
@@ -149,7 +171,29 @@
       "primary_documentation_urls": [
         "https://docs.ase-lib.org/_modules/ase/calculators/lj.html",
         "https://docs.lammps.org/compute_pe_atom.html"
-      ]
+      ],
+      "upstream_submission": {
+        "url": "https://github.com/TorchSim/torch-sim/pull/635",
+        "number": 635,
+        "state": "open",
+        "checked_on": "2026-11-06",
+        "head_repository": "Brean0/torch-sim",
+        "branch": "brian/fix-pair-atom-energies",
+        "commit": "213aaca6feb6eca2933c8bae28aaeedbde46786a",
+        "base": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+        "patch": "patches/F002.patch",
+        "patch_sha256": "e5bae1835e8be82d99f2e78fb88e125e686ce777bd963c9e6dcb6f4f875454c2",
+        "validation": {
+          "focused_passed": 59,
+          "final_full_suite_passed": 1011,
+          "final_full_suite_skipped": 208,
+          "ruff_version": "0.17.1",
+          "ruff_lint_and_format": "passed",
+          "platform": "macOS CPU",
+          "python": "3.12.9",
+          "full_suite_cleanup_warnings": 3
+        }
+      }
     },
     {
       "id": "F003",
@@ -200,7 +244,29 @@
       },
       "primary_documentation_urls": [
         "https://jax-md.readthedocs.io/en/main/jax_md.energy.html#jax_md.energy.soft_sphere_pair"
-      ]
+      ],
+      "upstream_submission": {
+        "url": "https://github.com/TorchSim/torch-sim/pull/636",
+        "number": 636,
+        "state": "open",
+        "checked_on": "2026-11-06",
+        "head_repository": "Brean0/torch-sim",
+        "branch": "brian/fix-fractional-soft-sphere-forces",
+        "commit": "014a0979c1d6febabf681b47347587bfc8abdd42",
+        "base": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+        "patch": "patches/F003.patch",
+        "patch_sha256": "299986b2154aed2d02bc8e5f45970a33e38d906632a3fdf3d6dc6094b5edf465",
+        "validation": {
+          "focused_passed": 44,
+          "final_full_suite_passed": 1007,
+          "final_full_suite_skipped": 208,
+          "ruff_version": "0.17.1",
+          "ruff_lint_and_format": "passed",
+          "platform": "macOS CPU",
+          "python": "3.12.9",
+          "full_suite_cleanup_warnings": 3
+        }
+      }
     },
     {
       "id": "F004",
@@ -254,7 +320,29 @@
       },
       "primary_documentation_urls": [
         "https://docs.ase-lib.org/ase/md.html#ase.md.verlet.VelocityVerlet"
-      ]
+      ],
+      "upstream_submission": {
+        "url": "https://github.com/TorchSim/torch-sim/pull/637",
+        "number": 637,
+        "state": "open",
+        "checked_on": "2026-11-06",
+        "head_repository": "Brean0/torch-sim",
+        "branch": "brian/fix-per-system-timesteps",
+        "commit": "dbc39d81c72d7a8f628efeb0196c6f3f2cdf099e",
+        "base": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+        "patch": "patches/F004.patch",
+        "patch_sha256": "98e758278af7e405c5910668c18c70bf2ec1b7d0bf04507ef10f7186a1210d0f",
+        "validation": {
+          "focused_passed": 47,
+          "final_full_suite_passed": 1019,
+          "final_full_suite_skipped": 208,
+          "ruff_version": "0.17.1",
+          "ruff_lint_and_format": "passed",
+          "platform": "macOS CPU",
+          "python": "3.12.9",
+          "full_suite_cleanup_warnings": 3
+        }
+      }
     },
     {
       "id": "F005",
@@ -374,7 +462,29 @@
       },
       "primary_documentation_urls": [
         "https://docs.ase-lib.org/ase/io/trajectory.html"
-      ]
+      ],
+      "upstream_submission": {
+        "url": "https://github.com/TorchSim/torch-sim/pull/638",
+        "number": 638,
+        "state": "open",
+        "checked_on": "2026-11-06",
+        "head_repository": "Brean0/torch-sim",
+        "branch": "brian/preserve-ase-export-masses",
+        "commit": "e654ad21cfb5dca9710f8f28ba307e8e5b162e05",
+        "base": "d6d8e9fc30129e01a05b551c2d71912821c9b68b",
+        "patch": "patches/F006.patch",
+        "patch_sha256": "53c0f3f653dbd966eff429e80fa66d1bbadd55a0427e20fb82a63114152b336c",
+        "validation": {
+          "focused_passed": 121,
+          "final_full_suite_passed": 1005,
+          "final_full_suite_skipped": 208,
+          "ruff_version": "0.17.1",
+          "ruff_lint_and_format": "passed",
+          "platform": "macOS CPU",
+          "python": "3.12.9",
+          "full_suite_cleanup_warnings": 3
+        }
+      }
     },
     {
       "id": "F007",
