@@ -1,0 +1,131 @@
+From 213aaca6feb6eca2933c8bae28aaeedbde46786a Mon Sep 17 00:00:00 2001
+From: Brean0 <90539204+Brean0@users.noreply.github.com>
+Date: Fri, 6 Nov 2026 02:14:26 -0500
+Subject: [PATCH] Split weighted pair energies equally between atoms
+
+---
+ tests/models/test_pair_potential.py | 76 ++++++++++++++++++++++++++++-
+ torch_sim/models/pair_potential.py  |  9 +++-
+ 2 files changed, 82 insertions(+), 3 deletions(-)
+
+diff --git a/tests/models/test_pair_potential.py b/tests/models/test_pair_potential.py
+index ff103b4..c983aff 100644
+--- a/tests/models/test_pair_potential.py
++++ b/tests/models/test_pair_potential.py
+@@ -1,6 +1,7 @@
+ """Tests for the general pair potential model and pair forces model."""
+ 
+ import functools
++from collections.abc import Callable
+ 
+ import pytest
+ import torch
+@@ -19,7 +20,7 @@ from torch_sim.models.pair_potential import (
+ )
+ from torch_sim.models.particle_life import particle_life_pair_force
+ from torch_sim.models.soft_sphere import soft_sphere_pair
+-from torch_sim.neighbors import torch_nl_n2
++from torch_sim.neighbors import torch_nl_n2, torchsim_nl
+ 
+ 
+ # BMHTF (Born-Meyer-Huggins-Tosi-Fumi) potential for NaCl
+@@ -353,3 +354,76 @@ def test_no_retain_graph_frees_graph(nacl_sim_state: ts.SimState) -> None:
+     out = model(nacl_sim_state)
+     with pytest.raises(RuntimeError, match="does not require grad"):
+         torch.autograd.grad(out["energy"].sum(), A)
++
++
++@pytest.mark.parametrize("neighbor_list_fn", [torch_nl_n2, torchsim_nl])
++@pytest.mark.parametrize("reduce_to_half_list", [False, True])
++def test_isolated_pair_atom_energies(
++    neighbor_list_fn: Callable, *, reduce_to_half_list: bool
++) -> None:
++    """The unique pair energy is divided equally between its two atoms."""
++    state = ts.SimState(
++        positions=torch.tensor([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0]], dtype=DTYPE),
++        cell=10 * torch.eye(3, dtype=DTYPE),
++        pbc=False,
++        masses=torch.ones(2, dtype=DTYPE),
++        atomic_numbers=torch.tensor([1, 2]),
++    )
++    model = PairPotentialModel(
++        pair_fn=soft_sphere_pair,
++        cutoff=1.0,
++        dtype=DTYPE,
++        per_atom_energies=True,
++        neighbor_list_fn=neighbor_list_fn,
++        reduce_to_half_list=reduce_to_half_list,
++    )
++    out = model(state)
++    # For epsilon=sigma=1 and alpha=2, V(0.5) = (1-0.5)**2 / 2 = 0.125.
++    torch.testing.assert_close(out["energy"], torch.tensor([0.125], dtype=DTYPE))
++    torch.testing.assert_close(
++        out["energies"], torch.tensor([0.0625, 0.0625], dtype=DTYPE)
++    )
++    torch.testing.assert_close(out["energies"].sum(), out["energy"].sum())
++
++
++@pytest.mark.parametrize("neighbor_list_fn", [torch_nl_n2, torchsim_nl])
++@pytest.mark.parametrize("reduce_to_half_list", [False, True])
++def test_batched_atom_energies_unequal_system_sizes(
++    neighbor_list_fn: Callable, *, reduce_to_half_list: bool
++) -> None:
++    """Atom energies sum to each system's total for unequal-sized systems."""
++    state = ts.SimState(
++        positions=torch.tensor(
++            [
++                [0.0, 0.0, 0.0],
++                [0.5, 0.0, 0.0],
++                [1.0, 0.0, 0.0],
++                [0.0, 0.0, 0.0],
++                [0.5, 0.0, 0.0],
++            ],
++            dtype=DTYPE,
++        ),
++        cell=(10 * torch.eye(3, dtype=DTYPE)).repeat(2, 1, 1),
++        pbc=False,
++        masses=torch.ones(5, dtype=DTYPE),
++        atomic_numbers=torch.ones(5, dtype=torch.long),
++        system_idx=torch.tensor([0, 0, 0, 1, 1]),
++    )
++    model = PairPotentialModel(
++        pair_fn=soft_sphere_pair,
++        cutoff=1.0,
++        dtype=DTYPE,
++        per_atom_energies=True,
++        neighbor_list_fn=neighbor_list_fn,
++        reduce_to_half_list=reduce_to_half_list,
++    )
++    out = model(state)
++    # System 0 has two adjacent r=0.5 pairs; system 1 has one such pair.
++    torch.testing.assert_close(out["energy"], torch.tensor([0.25, 0.125], dtype=DTYPE))
++    torch.testing.assert_close(
++        out["energies"],
++        torch.tensor([0.0625, 0.125, 0.0625, 0.0625, 0.0625], dtype=DTYPE),
++    )
++    for system in range(state.n_systems):
++        atom_energy_sum = out["energies"][state.system_idx == system].sum()
++        torch.testing.assert_close(atom_energy_sum, out["energy"][system])
+diff --git a/torch_sim/models/pair_potential.py b/torch_sim/models/pair_potential.py
+index e2ed710..cf45e9e 100644
+--- a/torch_sim/models/pair_potential.py
++++ b/torch_sim/models/pair_potential.py
+@@ -413,8 +413,13 @@ class PairPotentialModel(ModelInterface):
+             atom_energies = torch.zeros(
+                 positions.shape[0], dtype=dtype, device=self._device
+             )
+-            atom_energies = atom_energies.index_add(0, mapping[0], ew * pair_energies)
+-            atom_energies = atom_energies.index_add(0, mapping[1], ew * pair_energies)
++            # Divide each weighted pair energy equally between its endpoints.
++            atom_energies = atom_energies.index_add(
++                0, mapping[0], 0.5 * ew * pair_energies
++            )
++            atom_energies = atom_energies.index_add(
++                0, mapping[1], 0.5 * ew * pair_energies
++            )
+             results["energies"] = atom_energies
+ 
+         if need_grad:
+-- 
+2.37.1
+

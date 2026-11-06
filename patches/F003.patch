@@ -1,0 +1,146 @@
+From 014a0979c1d6febabf681b47347587bfc8abdd42 Mon Sep 17 00:00:00 2001
+From: Brean0 <90539204+Brean0@users.noreply.github.com>
+Date: Fri, 6 Nov 2026 02:14:09 -0500
+Subject: [PATCH] Fix fractional soft-sphere gradients outside pair support
+
+---
+ tests/models/test_soft_sphere.py | 92 ++++++++++++++++++++++++++++++++
+ torch_sim/models/soft_sphere.py  | 12 +++--
+ 2 files changed, 100 insertions(+), 4 deletions(-)
+
+diff --git a/tests/models/test_soft_sphere.py b/tests/models/test_soft_sphere.py
+index 55a5766..b06448d 100644
+--- a/tests/models/test_soft_sphere.py
++++ b/tests/models/test_soft_sphere.py
+@@ -25,6 +25,98 @@ def test_soft_sphere_zero_beyond_sigma() -> None:
+     assert e[2] == 0.0
+ 
+ 
++@pytest.mark.parametrize(
++    ("alpha", "active_energy", "active_gradient"),
++    [
++        (0.5, 1.4142135623730951, -1.4142135623730951),
++        (2.5, 0.07071067811865477, -0.3535533905932738),
++    ],
++)
++def test_soft_sphere_fractional_gradient_inside_and_beyond_sigma(
++    alpha: float, active_energy: float, active_gradient: float
++) -> None:
++    """Fractional powers preserve active pairs and have zero gradient beyond sigma."""
++    dr = torch.tensor([0.5, 1.5, 2.0], dtype=torch.float64, requires_grad=True)
++    z = _dummy_z(len(dr))
++    energy = soft_sphere_pair(dr, z, z, sigma=1.0, alpha=alpha)
++    (gradient,) = torch.autograd.grad(energy.sum(), dr)
++
++    torch.testing.assert_close(
++        energy, torch.tensor([active_energy, 0.0, 0.0], dtype=torch.float64)
++    )
++    assert torch.isfinite(gradient).all()
++    torch.testing.assert_close(
++        gradient, torch.tensor([active_gradient, 0.0, 0.0], dtype=torch.float64)
++    )
++
++
++def test_multispecies_fractional_forces_outside_pair_support() -> None:
++    """A retained neighbor outside its species sigma has finite zero force."""
++    model = SoftSphereMultiModel(
++        atomic_numbers=torch.tensor([18, 36]),
++        sigma_matrix=torch.tensor([[1.0, 2.0], [2.0, 2.0]], dtype=torch.float64),
++        alpha_matrix=torch.full((2, 2), 2.5, dtype=torch.float64),
++        dtype=torch.float64,
++        compute_forces=True,
++    )
++    state = ts.SimState(
++        positions=torch.tensor(
++            [[0.0, 0.0, 0.0], [1.5, 0.0, 0.0], [5.0, 0.0, 0.0]],
++            dtype=torch.float64,
++        ),
++        cell=10.0 * torch.eye(3, dtype=torch.float64),
++        pbc=False,
++        masses=torch.ones(3, dtype=torch.float64),
++        atomic_numbers=torch.tensor([18, 18, 36]),
++    )
++
++    results = model(state)
++
++    torch.testing.assert_close(results["energy"], torch.zeros(1, dtype=torch.float64))
++    assert torch.isfinite(results["forces"]).all()
++    torch.testing.assert_close(results["forces"], torch.zeros_like(state.positions))
++
++
++def test_multispecies_fractional_active_and_outside_pair_support() -> None:
++    """An active pair retains its energy and force beside masked neighbors."""
++    model = SoftSphereMultiModel(
++        atomic_numbers=torch.tensor([18, 36]),
++        sigma_matrix=torch.tensor([[1.0, 2.0], [2.0, 2.0]], dtype=torch.float64),
++        alpha_matrix=torch.full((2, 2), 2.5, dtype=torch.float64),
++        dtype=torch.float64,
++        compute_forces=True,
++    )
++    state = ts.SimState(
++        positions=torch.tensor(
++            [[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [1.7, 0.0, 0.0], [5.0, 0.0, 0.0]],
++            dtype=torch.float64,
++        ),
++        cell=10.0 * torch.eye(3, dtype=torch.float64),
++        pbc=False,
++        masses=torch.ones(4, dtype=torch.float64),
++        atomic_numbers=torch.tensor([18, 18, 18, 36]),
++    )
++
++    results = model(state)
++
++    # Only the r=0.5 pair is active: V=0.4*0.5**2.5 and |F|=0.5**1.5.
++    torch.testing.assert_close(
++        results["energy"], torch.tensor([0.07071067811865477], dtype=torch.float64)
++    )
++    torch.testing.assert_close(
++        results["forces"],
++        torch.tensor(
++            [
++                [-0.3535533905932738, 0.0, 0.0],
++                [0.3535533905932738, 0.0, 0.0],
++                [0.0, 0.0, 0.0],
++                [0.0, 0.0, 0.0],
++            ],
++            dtype=torch.float64,
++        ),
++    )
++
++
+ def test_soft_sphere_repulsive_only() -> None:
+     """Soft-sphere energies are non-negative for r < sigma."""
+     dr = torch.linspace(0.1, 0.99, 50)
+diff --git a/torch_sim/models/soft_sphere.py b/torch_sim/models/soft_sphere.py
+index 598eff8..31e3639 100644
+--- a/torch_sim/models/soft_sphere.py
++++ b/torch_sim/models/soft_sphere.py
+@@ -55,8 +55,10 @@ def soft_sphere_pair(
+     Returns:
+         Pair energies, shape [n_pairs].
+     """
+-    energy = epsilon / alpha * (1.0 - dr / sigma).pow(alpha)
+-    return torch.where(dr < sigma, energy, torch.zeros_like(energy))
++    within_cutoff = dr < sigma
++    base = torch.where(within_cutoff, 1.0 - dr / sigma, torch.ones_like(dr))
++    energy = epsilon / alpha * base.pow(alpha)
++    return torch.where(within_cutoff, energy, torch.zeros_like(energy))
+ 
+ 
+ def soft_sphere_pair_force(
+@@ -163,8 +165,10 @@ class MultiSoftSpherePairFn(torch.nn.Module):
+         sigma = self.sigma_matrix[idx_i, idx_j]
+         epsilon = self.epsilon_matrix[idx_i, idx_j]
+         alpha = self.alpha_matrix[idx_i, idx_j]
+-        energy = epsilon / alpha * (1.0 - dr / sigma).pow(alpha)
+-        return torch.where(dr < sigma, energy, torch.zeros_like(energy))
++        within_cutoff = dr < sigma
++        base = torch.where(within_cutoff, 1.0 - dr / sigma, torch.ones_like(dr))
++        energy = epsilon / alpha * base.pow(alpha)
++        return torch.where(within_cutoff, energy, torch.zeros_like(energy))
+ 
+ 
+ DEFAULT_SIGMA = torch.tensor(1.0)
+-- 
+2.37.1
+

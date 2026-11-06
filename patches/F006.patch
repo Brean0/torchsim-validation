@@ -1,0 +1,68 @@
+From e654ad21cfb5dca9710f8f28ba307e8e5b162e05 Mon Sep 17 00:00:00 2001
+From: Brean0 <90539204+Brean0@users.noreply.github.com>
+Date: Fri, 6 Nov 2026 02:14:29 -0500
+Subject: [PATCH] Preserve explicit masses when exporting SimState to ASE
+
+---
+ tests/test_io.py | 19 +++++++++++++++++++
+ torch_sim/io.py  |  7 ++++++-
+ 2 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/tests/test_io.py b/tests/test_io.py
+index edbcf9f..b70325c 100644
+--- a/tests/test_io.py
++++ b/tests/test_io.py
+@@ -35,6 +35,25 @@ def test_single_atoms_to_state(si_atoms: Atoms) -> None:
+     assert state.atomic_numbers.dtype == torch.int
+ 
+ 
++@pytest.mark.parametrize("batched", [False, True])
++def test_state_to_atoms_preserves_custom_masses(*, batched: bool) -> None:
++    """Explicit isotope masses survive ASE export for single and batched states."""
++    atoms_list = [Atoms("H2", positions=[[0, 0, 0], [1, 0, 0]], masses=[2.014, 3.016])]
++    expected_masses = [[2.014, 3.016]]
++    if batched:
++        atoms_list.append(Atoms("He", positions=[[0, 0, 0]], masses=[4.5]))
++        expected_masses.append([4.5])
++
++    state = ts.io.atoms_to_state(atoms_list if batched else atoms_list[0], DEVICE, DTYPE)
++    exported_atoms = ts.io.state_to_atoms(state)
++
++    assert len(exported_atoms) == len(expected_masses)
++    for atoms, masses in zip(exported_atoms, expected_masses, strict=True):
++        np.testing.assert_allclose(atoms.get_masses(), masses)
++    round_trip_state = ts.io.atoms_to_state(exported_atoms, DEVICE, DTYPE)
++    torch.testing.assert_close(round_trip_state.masses, state.masses)
++
++
+ @pytest.mark.parametrize(
+     ("system_extras_map", "atom_extras_map", "expected_sys", "expected_atom"),
+     [
+diff --git a/torch_sim/io.py b/torch_sim/io.py
+index 6f3b145..5a9d0a2 100644
+--- a/torch_sim/io.py
++++ b/torch_sim/io.py
+@@ -71,6 +71,7 @@ def state_to_atoms(
+ 
+     # Convert tensors to numpy arrays on CPU
+     positions = state.positions.detach().cpu().numpy()
++    masses = state.masses.detach().cpu().numpy()
+     cell = state.cell.detach().cpu().numpy()  # Shape: (n_systems, 3, 3)
+     atomic_numbers = state.atomic_numbers.detach().cpu().numpy()
+     system_indices = (
+@@ -98,7 +99,11 @@ def state_to_atoms(
+             tuple(pbc_np[sys_idx].tolist()) if pbc_np.ndim > 1 else tuple(pbc_np.tolist())
+         )
+         atoms = Atoms(
+-            symbols=symbols, positions=system_positions, cell=system_cell, pbc=pbc_for_sys
++            symbols=symbols,
++            positions=system_positions,
++            masses=masses[mask],
++            cell=system_cell,
++            pbc=pbc_for_sys,
+         )
+ 
+         if system_extras_map:
+-- 
+2.37.1
+

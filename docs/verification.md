@@ -26,3 +26,10 @@ uv run --with pytest==9.2.0 python -m pytest tests -q
 To run live supplemental tests, use the installed TorchSim/ASE environment for the last command and set `TORCHSIM_VALIDATION_LIVE=1`. For live five-engine computations, see the top-level README and `scripts/run_force_comparison.py --help`.
 
 Successful evidence validation confirms the recorded discrepancies and controls. It does not establish that upstream defects are fixed or certify untested workflows or platforms.
+
+
+## Prepared implementation changes
+
+Five separate local branches now contain proposed repairs and regression tests for F001, F002, F003, F004 and F006. The [PR index](../pull-requests/README.md) links to each patch and draft and records the focused and repository-wide test results, skipped coverage and warnings. All five patches were independently checked for application against the exact audited base; the original checkout has no tracked implementation changes.
+
+Independent cross-review found no production correctness blocker. It prompted stronger committed controls for unequal system sizes, nonzero active soft-sphere interactions and asymmetric source-force accumulation. The last test-only additions were checked with the focused suites and Ruff; earlier full-suite results remain labeled as such. The PDF was rendered and visually inspected after its final wording update, and its page count is one.

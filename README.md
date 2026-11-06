@@ -2,7 +2,7 @@
 
 This repo documents selected TorchSim findings and provides the code, inputs and results needed to check them. Working controls are included so each discrepancy can be traced to a specific implementation or option.
 
-Audited TorchSim commit: [`d6d8e9fc30129e01a05b551c2d71912821c9b68b`](https://github.com/TorchSim/torch-sim/commit/d6d8e9fc30129e01a05b551c2d71912821c9b68b). It was still upstream `main` when checked on November 6, 2026. The repo contains validation evidence; the upstream implementation and submission history are unchanged.
+Audited TorchSim commit: [`d6d8e9fc30129e01a05b551c2d71912821c9b68b`](https://github.com/TorchSim/torch-sim/commit/d6d8e9fc30129e01a05b551c2d71912821c9b68b). It was still upstream `main` when checked on November 6, 2026. The repo contains validation evidence and separately prepared local fix proposals; the audited upstream implementation and upstream submission history are unchanged.
 
 ## Findings with native reference controls
 
@@ -29,6 +29,10 @@ These cases use state or API consistency checks, or require further interpretati
 The initial audit produced eight reproducible findings. They are a bounded inventory, with the evidence and limits tracked in [findings.json](findings.json) and the [coverage matrix](docs/coverage.md). A missing equivalent feature in another library is marked **not applicable**.
 
 For F001, there is **one independently corroborated force-accumulation root cause**, exposed through at least two named public classes: `PairForcesModel` and its `ParticleLifeModel` subclass. Those entry points count as one defect. The total number of defects in TorchSim, affected users and effects on published research remain unknown.
+
+The [source and release history](docs/history.md) records how long the affected implementations have existed, with historical-runtime limits stated separately. Each report also includes a proposed change.
+
+The [local PR review package](pull-requests/README.md) contains five separate proposed fixes, regression tests and draft descriptions. The [one-page overview](output/pdf/torchsim-validation-overview.pdf) summarizes the findings without code or setup instructions.
 
 ## Run the checks
 

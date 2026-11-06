@@ -1,0 +1,124 @@
+From dbc39d81c72d7a8f628efeb0196c6f3f2cdf099e Mon Sep 17 00:00:00 2001
+From: Brean0 <90539204+Brean0@users.noreply.github.com>
+Date: Fri, 6 Nov 2026 02:14:21 -0500
+Subject: [PATCH] Map per-system timesteps to atoms in MD updates
+
+---
+ tests/test_integrators.py   | 71 +++++++++++++++++++++++++++++++++++++
+ torch_sim/integrators/md.py |  4 +++
+ 2 files changed, 75 insertions(+)
+
+diff --git a/tests/test_integrators.py b/tests/test_integrators.py
+index 821c09c..493dcfe 100644
+--- a/tests/test_integrators.py
++++ b/tests/test_integrators.py
+@@ -7,6 +7,7 @@ from ase.build import bulk
+ import torch_sim as ts
+ from tests.conftest import DEVICE, DTYPE, make_left_handed
+ from torch_sim.integrators import initialize_momenta
++from torch_sim.integrators.md import MDState, momentum_step
+ from torch_sim.integrators.npt import _npt_langevin_anisotropic_compute_cell_force
+ from torch_sim.models.lennard_jones import LennardJonesModel
+ from torch_sim.state import coerce_prng
+@@ -1273,6 +1274,76 @@ def test_npt_nose_hoover_multi_kt(
+         assert invariant_std / invariant_traj.mean() < 0.15
+ 
+ 
++@pytest.mark.parametrize("atoms_per_system", [(2, 2), (2, 2, 2), (1, 3), (1, 2, 3)])
++@pytest.mark.parametrize("per_system_dt", [False, True])
++def test_nve_free_particle_timestep(
++    atoms_per_system: tuple[int, ...], *, per_system_dt: bool
++) -> None:
++    """Free particles move isotropically with their own system's timestep."""
++    n_systems, n_atoms = len(atoms_per_system), sum(atoms_per_system)
++    positions = torch.zeros(n_atoms, 3, dtype=DTYPE)
++    positions[:, 0] = torch.cat(
++        [2.0 * torch.arange(count, dtype=DTYPE) for count in atoms_per_system]
++    )
++    state = ts.SimState(
++        positions=positions,
++        masses=torch.ones(n_atoms, dtype=DTYPE),
++        cell=(10.0 * torch.eye(3, dtype=DTYPE)).repeat(n_systems, 1, 1),
++        pbc=False,
++        atomic_numbers=torch.full((n_atoms,), 18),
++        system_idx=torch.arange(n_systems).repeat_interleave(
++            torch.tensor(atoms_per_system)
++        ),
++    )
++    free_model = LennardJonesModel(sigma=1.0, epsilon=0.0, dtype=DTYPE, cutoff=3.0)
++    state = ts.nve_init(state, free_model, kT=0.0)
++    state.momenta = torch.ones_like(state.momenta)
++    initial_positions = state.positions.clone()
++    dt = torch.tensor([0.1, 0.2, 0.3][:n_systems], dtype=DTYPE) if per_system_dt else 0.2
++
++    state = ts.nve_step(state, free_model, dt=dt)
++
++    for system in range(n_systems):
++        displacement = [0.1, 0.2, 0.3][system] if per_system_dt else 0.2
++        torch.testing.assert_close(
++            (state.positions - initial_positions)[state.system_idx == system],
++            torch.full((atoms_per_system[system], 3), displacement, dtype=DTYPE),
++        )
++    torch.testing.assert_close(state.momenta, torch.ones_like(state.momenta))
++
++
++@pytest.mark.parametrize("atoms_per_system", [(2, 2), (2, 2, 2), (1, 3), (1, 2, 3)])
++@pytest.mark.parametrize("per_system_dt", [False, True])
++def test_momentum_step_timestep(
++    atoms_per_system: tuple[int, ...], *, per_system_dt: bool
++) -> None:
++    """Constant forces advance every momentum component by its system's dt."""
++    n_systems, n_atoms = len(atoms_per_system), sum(atoms_per_system)
++    state = MDState(
++        positions=torch.zeros(n_atoms, 3, dtype=DTYPE),
++        masses=torch.ones(n_atoms, dtype=DTYPE),
++        cell=torch.eye(3, dtype=DTYPE).repeat(n_systems, 1, 1),
++        pbc=False,
++        atomic_numbers=torch.full((n_atoms,), 18),
++        system_idx=torch.arange(n_systems).repeat_interleave(
++            torch.tensor(atoms_per_system)
++        ),
++        momenta=torch.zeros(n_atoms, 3, dtype=DTYPE),
++        forces=torch.ones(n_atoms, 3, dtype=DTYPE),
++        energy=torch.zeros(n_systems, dtype=DTYPE),
++    )
++    dt = torch.tensor([0.1, 0.2, 0.3][:n_systems], dtype=DTYPE) if per_system_dt else 0.2
++
++    state = momentum_step(state, dt)
++
++    for system in range(n_systems):
++        increment = [0.1, 0.2, 0.3][system] if per_system_dt else 0.2
++        torch.testing.assert_close(
++            state.momenta[state.system_idx == system],
++            torch.full((atoms_per_system[system], 3), increment, dtype=DTYPE),
++        )
++
++
+ def test_nve(ar_double_sim_state: ts.SimState, lj_model: LennardJonesModel):
+     n_steps = 100
+     dt = torch.tensor(0.001, dtype=DTYPE)
+diff --git a/torch_sim/integrators/md.py b/torch_sim/integrators/md.py
+index ee17550..93c2283 100644
+--- a/torch_sim/integrators/md.py
++++ b/torch_sim/integrators/md.py
+@@ -182,6 +182,8 @@ def momentum_step[T: MDState](state: T, dt: TimeArg) -> T:
+ 
+     """
+     dt = torch.as_tensor(dt, device=state.device, dtype=state.dtype)
++    if dt.ndim > 0:
++        dt = dt[state.system_idx].unsqueeze(-1)
+     new_momenta = state.momenta + state.forces * dt
+     state.set_constrained_momenta(new_momenta)
+     return state
+@@ -203,6 +205,8 @@ def position_step[T: MDState](state: T, dt: TimeArg) -> T:
+ 
+     """
+     dt = torch.as_tensor(dt, device=state.device, dtype=state.dtype)
++    if dt.ndim > 0:
++        dt = dt[state.system_idx].unsqueeze(-1)
+     new_positions = state.positions + state.velocities * dt
+     state.set_constrained_positions(new_positions)
+     return state
+-- 
+2.37.1
+
